@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2eee4">
+  <title>Древний Китай — мини-игра</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f2eee4;
+      --paper-light: #fbf9f3;
+      --ink: #192d27;
+      --muted: #69756c;
+      --line: #d8d7ca;
+      --jade: #28644d;
+      --jade-dark: #194a39;
+      --vermilion: #bb4d37;
+      --gold: #c59a51;
+      --serif: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --sans: "Aptos", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image: repeating-linear-gradient(0deg, transparent 0 39px, rgb(25 45 39 / 3%) 39px 40px);
+      font-family: var(--sans);
+    }
+
+    button { font: inherit; }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(1120px, calc(100% - 48px));
+      height: 76px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wordmark {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .seal {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 1px solid var(--vermilion);
+      color: var(--vermilion);
+      font-family: var(--serif);
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .header-note {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    main {
+      width: min(1000px, calc(100% - 48px));
+      margin: 42px auto 64px;
+    }
+
+    .intro {
+      position: relative;
+      display: grid;
+      min-height: 290px;
+      grid-template-columns: 1.15fr .85fr;
+      overflow: hidden;
+      background: var(--ink);
+      color: var(--paper-light);
+      animation: arrive .55s ease-out both;
+    }
+
+    .intro-copy {
+      z-index: 1;
+      align-self: center;
+      padding: 40px 48px;
+    }
+
+    .eyebrow {
+      margin: 0 0 15px;
+      color: #d3b476;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, p { margin-top: 0; }
+
+    h1 {
+      max-width: 530px;
+      margin-bottom: 14px;
+      font-family: var(--serif);
+      font-size: clamp(34px, 5vw, 54px);
+      font-weight: 500;
+      line-height: 1.05;
+    }
+
+    .intro-description {
+      margin-bottom: 26px;
+      color: #d3d7cd;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .intro-image {
+      position: relative;
+      min-height: 290px;
+      background: #435448;
+    }
+
+    .intro-image::after {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, var(--ink), rgb(25 45 39 / 4%) 55%), linear-gradient(0deg, rgb(25 45 39 / 24%), transparent 50%);
+      content: "";
+    }
+
+    .intro-image img {
+      width: 100%;
+      height: 100%;
+      min-height: 290px;
+      object-fit: cover;
+      object-position: 55% center;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 22px;
+      border: 1px solid transparent;
+      background: var(--vermilion);
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: background-color .18s ease, transform .18s ease;
+    }
+
+    .button:hover:not(:disabled) { background: #9e3b2a; transform: translateY(-1px); }
+    .button:focus-visible, .answer:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    .button:disabled { background: #a9aaa0; cursor: not-allowed; }
+
+    .button-arrow { font-size: 19px; line-height: 1; }
+
+    .game, .result {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      animation: arrive .35s ease-out both;
+    }
+
+    .game-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .level-tag {
+      color: var(--vermilion);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .progress-track {
+      height: 4px;
+      margin-bottom: 24px;
+      background: #d8d7ca;
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background: var(--jade);
+      transition: width .3s ease;
+    }
+
+    .question-panel {
+      padding: clamp(24px, 5vw, 42px);
+      border: 1px solid var(--line);
+      background: var(--paper-light);
+      box-shadow: 0 12px 36px rgb(25 45 39 / 6%);
+    }
+
+    .question-number {
+      margin-bottom: 12px;
+      color: var(--vermilion);
+      font-family: var(--serif);
+      font-size: 15px;
+    }
+
+    .question-title {
+      margin-bottom: 28px;
+      font-family: var(--serif);
+      font-size: clamp(23px, 3.5vw, 32px);
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    .answers {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .answer {
+      display: grid;
+      min-height: 56px;
+      grid-template-columns: 34px 1fr 18px;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color .15s ease, background-color .15s ease;
+    }
+
+    .answer:hover { border-color: var(--jade); background: #f2f5ed; }
+    .answer[aria-pressed="true"] { border-color: var(--jade); background: #e8efe7; }
+
+    .answer-letter {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 14px;
+    }
+
+    .answer[aria-pressed="true"] .answer-letter { border-color: var(--jade); background: var(--jade); color: white; }
+
+    .answer-check {
+      color: var(--jade);
+      font-size: 17px;
+      opacity: 0;
+    }
+
+    .answer[aria-pressed="true"] .answer-check { opacity: 1; }
+
+    .game-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 22px;
+    }
+
+    .selection-hint { margin: 0; color: var(--muted); font-size: 13px; }
+
+    .result {
+      padding: clamp(28px, 6vw, 58px);
+      border: 1px solid var(--line);
+      background: var(--paper-light);
+      text-align: center;
+    }
+
+    .result-mark {
+      display: grid;
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 20px;
+      place-items: center;
+      border: 1px solid var(--vermilion);
+      color: var(--vermilion);
+      font-family: var(--serif);
+      font-size: 22px;
+    }
+
+    .result h2 {
+      margin-bottom: 10px;
+      font-family: var(--serif);
+      font-size: clamp(29px, 5vw, 42px);
+      font-weight: 500;
+    }
+
+    .score {
+      margin: 18px 0 8px;
+      color: var(--jade-dark);
+      font-family: var(--serif);
+      font-size: clamp(56px, 10vw, 82px);
+      line-height: 1;
+    }
+
+    .score-caption { margin-bottom: 26px; color: var(--muted); }
+    .hidden { display: none !important; }
+
+    .site-footer {
+      width: min(1000px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 18px 0 28px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @keyframes arrive {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      .site-header { width: calc(100% - 32px); height: 64px; }
+      .header-note { font-size: 10px; }
+      main { width: calc(100% - 32px); margin-top: 24px; }
+      .intro { grid-template-columns: 1fr; }
+      .intro-copy { padding: 32px 26px; }
+      .intro-image { min-height: 150px; }
+      .intro-image img { min-height: 150px; max-height: 180px; }
+      .intro-image::after { background: linear-gradient(0deg, var(--ink), transparent 70%); }
+      .site-footer { width: calc(100% - 32px); }
+      .game-actions { align-items: flex-start; flex-direction: column; }
+      .game-actions .button { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wordmark"><span class="seal" aria-hidden="true">中</span><span>История цивилизаций</span></div>
+    <div class="header-note">Интерактивная викторина</div>
+  </header>
+
+  <main>
+    <section class="intro" id="welcome">
+      <div class="intro-copy">
+        <p class="eyebrow">12 вопросов · 3 уровня</p>
+        <h1>Древний Китай</h1>
+        <p class="intro-description">Проверьте, что вы знаете об истории, философии и открытиях одной из древнейших цивилизаций.</p>
+        <button class="button" id="start-button" type="button">Начать <span class="button-arrow" aria-hidden="true">→</span></button>
+      </div>
+      <div class="intro-image" aria-hidden="true">
+        <img src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="">
+      </div>
+    </section>
+
+    <section class="game hidden" id="game" aria-live="polite" aria-atomic="true">
+      <div class="game-top">
+        <span id="question-count">Вопрос 1 из 12</span>
+        <span class="level-tag" id="question-level">Легкий уровень</span>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="Прогресс викторины" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="question-panel">
+        <p class="question-number" id="question-number">Вопрос 01</p>
+        <h2 class="question-title" id="question-title"></h2>
+        <div class="answers" id="answers" role="group" aria-label="Варианты ответа"></div>
+        <div class="game-actions">
+          <p class="selection-hint" id="selection-hint">Выберите один вариант ответа</p>
+          <button class="button" id="next-button" type="button" disabled>Далее <span class="button-arrow" aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="result hidden" id="result" aria-live="polite">
+      <div class="result-mark" aria-hidden="true">終</div>
+      <p class="eyebrow">Викторина завершена</p>
+      <h2>Ваш результат</h2>
+      <p class="score" id="score">0/12</p>
+      <p class="score-caption" id="score-caption"></p>
+      <button class="button" id="restart-button" type="button">Пройти ещё раз <span class="button-arrow" aria-hidden="true">↻</span></button>
+    </section>
+  </main>
+
+  <footer class="site-footer">Древний Китай · мини-игра</footer>
+
+  <script>
+    const questions = [
+      {
+        level: "Легкий уровень",
+        text: "На берегах каких двух великих рек зародилась древнекитайская цивилизация?",
+        options: ["Нил и Евфрат", "Ганг и Инд", "Хуанхэ и Янцзы", "Амур и Меконг"],
+        correct: 2
+      },
+      {
+        level: "Легкий уровень",
+        text: "Какая династия считалась первой в китайской истории и символизировала переход от первобытного строя к государству?",
+        options: ["Ся", "Шан", "Чжоу", "Цинь"],
+        correct: 0
+      },
+      {
+        level: "Легкий уровень",
+        text: "В каком году Цай Лунь усовершенствовал технологию производства бумаги?",
+        options: ["500 г. до н. э.", "105 г. н. э.", "221 г. до н. э.", "750 г. н. э."],
+        correct: 1
+      },
+      {
+        level: "Легкий уровень",
+        text: "Сколько глиняных фигур воинов находится в Терракотовой армии императора Цинь Шихуанди?",
+        options: ["5 000", "8 000", "12 000", "21 000"],
+        correct: 1
+      },
+      {
+        level: "Средний уровень",
+        text: "Что из перечисленного входит в «Пять постоянств» конфуцианства?",
+        options: ["Недеяние, интуиция, покорность, сила, власть", "Гуманность, справедливость, ритуал, мудрость, верность", "Честь, богатство, преданность, аскетизм, терпение", "Гармония, баланс, медитация, дисциплина, скромность"],
+        correct: 1
+      },
+      {
+        level: "Средний уровень",
+        text: "Какая культура, возникшая около 5000 года до н. э. в долине реки Янцзы, была одной из древнейших земледельческих культур мира?",
+        options: ["Хэмуду", "Банпо", "Луншань", "Яншао"],
+        correct: 0
+      },
+      {
+        level: "Средний уровень",
+        text: "На основе поиска чего алхимики династии Тан случайно изобрели порох в IX веке?",
+        options: ["Эликсира бессмертия", "Нового вида лекарства от оспы", "Неувядающей краски для каллиграфии", "Способа выплавки идеальной бронзы"],
+        correct: 0
+      },
+      {
+        level: "Средний уровень",
+        text: "Какое название носит даосский принцип «недеяния», означающий действие в согласии с природой вещей?",
+        options: ["Кэцзюй", "У-вэй", "Шань-шуй", "Чань"],
+        correct: 1
+      },
+      {
+        level: "Сложный уровень",
+        text: "Какова общая длина всех участков Великой Китайской стены, указанная в презентации?",
+        options: ["8 000 км", "15 000 км", "21 000 км", "40 000 км"],
+        correct: 2
+      },
+      {
+        level: "Сложный уровень",
+        text: "Какое из учений возникло в результате синтеза индийской буддийской медитации и китайской даосской интуиции?",
+        options: ["Конфуцианство", "Чань-буддизм (дзэн)", "Легизм", "Неоконфуцианство"],
+        correct: 1
+      },
+      {
+        level: "Сложный уровень",
+        text: "Как в Древнем Китае назывались традиционные пейзажи тушью в стиле «горы и воды»?",
+        options: ["Кэцзюй", "У-вэй", "Шань-шуй", "Гуохуа"],
+        correct: 2
+      },
+      {
+        level: "Сложный уровень",
+        text: "Какая древнекитайская экзаменационная система послужила прообразом современных конкурсных экзаменов и меритократии в госуправлении?",
+        options: ["Кэцзюй", "Шань-шуй", "У-вэй", "Цинь"],
+        correct: 0
+      }
+    ];
+
+    const welcomeView = document.querySelector("#welcome");
+    const gameView = document.querySelector("#game");
+    const resultView = document.querySelector("#result");
+    const questionCount = document.querySelector("#question-count");
+    const questionLevel = document.querySelector("#question-level");
+    const questionNumber = document.querySelector("#question-number");
+    const questionTitle = document.querySelector("#question-title");
+    const answersContainer = document.querySelector("#answers");
+    const nextButton = document.querySelector("#next-button");
+    const progressBar = document.querySelector("#progress-bar");
+    const progressTrack = document.querySelector(".progress-track");
+    const selectionHint = document.querySelector("#selection-hint");
+    const selectedAnswers = Array(questions.length).fill(null);
+    let currentQuestion = 0;
+
+    function renderQuestion() {
+      const question = questions[currentQuestion];
+      questionCount.textContent = `Вопрос ${currentQuestion + 1} из ${questions.length}`;
+      questionLevel.textContent = question.level;
+      questionNumber.textContent = `Вопрос ${String(currentQuestion + 1).padStart(2, "0")}`;
+      questionTitle.textContent = question.text;
+      progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
+      progressTrack.setAttribute("aria-valuenow", String(currentQuestion));
+      nextButton.disabled = selectedAnswers[currentQuestion] === null;
+      nextButton.innerHTML = currentQuestion === questions.length - 1
+        ? 'Показать результат <span class="button-arrow" aria-hidden="true">→</span>'
+        : 'Далее <span class="button-arrow" aria-hidden="true">→</span>';
+      selectionHint.textContent = selectedAnswers[currentQuestion] === null
+        ? "Выберите один вариант ответа"
+        : "Ответ выбран";
+
+      answersContainer.replaceChildren();
+      question.options.forEach((option, optionIndex) => {
+        const answerButton = document.createElement("button");
+        answerButton.className = "answer";
+        answerButton.type = "button";
+        answerButton.setAttribute("aria-pressed", String(selectedAnswers[currentQuestion] === optionIndex));
+
+        const letter = document.createElement("span");
+        letter.className = "answer-letter";
+        letter.textContent = String.fromCharCode(1040 + optionIndex) + ")";
+
+        const label = document.createElement("span");
+        label.textContent = option;
+
+        const check = document.createElement("span");
+        check.className = "answer-check";
+        check.setAttribute("aria-hidden", "true");
+        check.textContent = "✓";
+
+        answerButton.append(letter, label, check);
+        answerButton.addEventListener("click", () => {
+          selectedAnswers[currentQuestion] = optionIndex;
+          renderQuestion();
+        });
+        answersContainer.append(answerButton);
+      });
+    }
+
+    function showResult() {
+      const score = selectedAnswers.reduce((total, answer, index) => {
+        return total + Number(answer === questions[index].correct);
+      }, 0);
+      document.querySelector("#score").textContent = `${score}/${questions.length}`;
+      document.querySelector("#score-caption").textContent = score === questions.length
+        ? "Безупречный результат!"
+        : score >= 8
+          ? "Отличное знание истории Древнего Китая."
+          : score >= 4
+            ? "Хорошее начало. Теперь вы знаете ещё больше."
+            : "Самое время открыть для себя историю Древнего Китая.";
+      gameView.classList.add("hidden");
+      resultView.classList.remove("hidden");
+      document.querySelector("#restart-button").focus();
+    }
+
+    document.querySelector("#start-button").addEventListener("click", () => {
+      welcomeView.classList.add("hidden");
+      gameView.classList.remove("hidden");
+      renderQuestion();
+      answersContainer.querySelector("button")?.focus();
+    });
+
+    nextButton.addEventListener("click", () => {
+      if (selectedAnswers[currentQuestion] === null) return;
+      if (currentQuestion === questions.length - 1) {
+        showResult();
+        return;
+      }
+      currentQuestion += 1;
+      renderQuestion();
+      answersContainer.querySelector("button")?.focus();
+    });
+
+    document.querySelector("#restart-button").addEventListener("click", () => {
+      currentQuestion = 0;
+      selectedAnswers.fill(null);
+      resultView.classList.add("hidden");
+      welcomeView.classList.remove("hidden");
+      document.querySelector("#start-button").focus();
+    });
+  </script>
+</body>
+</html>
