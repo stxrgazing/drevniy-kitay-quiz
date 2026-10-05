@@ -241,15 +241,15 @@
       gap: 12px;
       padding: 10px 14px;
       border: 1px solid var(--line);
-      background: transparent;
+      background: linear-gradient(180deg, #fffefb, #f5f1e8);
       color: var(--ink);
       cursor: pointer;
       text-align: left;
-      transition: border-color .15s ease, background-color .15s ease;
+      transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease, background .15s ease;
     }
 
-    .answer:hover { border-color: var(--jade); background: #f2f5ed; }
-    .answer[aria-pressed="true"] { border-color: var(--jade); background: #e8efe7; }
+    .answer:hover { border-color: var(--jade); transform: translateY(-1px); box-shadow: 0 6px 18px rgb(25 45 39 / 8%); }
+    .answer[aria-pressed="true"] { border-color: var(--jade); background: #edf4ee; }
 
     .answer-letter {
       display: grid;
@@ -260,6 +260,7 @@
       color: var(--muted);
       font-family: var(--serif);
       font-size: 14px;
+      border-radius: 50%;
     }
 
     .answer[aria-pressed="true"] .answer-letter { border-color: var(--jade); background: var(--jade); color: white; }
@@ -268,9 +269,43 @@
       color: var(--jade);
       font-size: 17px;
       opacity: 0;
+      transition: opacity .15s ease;
     }
 
     .answer[aria-pressed="true"] .answer-check { opacity: 1; }
+
+    .answer.correct {
+      border-color: #1c8a59;
+      background: linear-gradient(180deg, #ebfff4, #dff9ea);
+      box-shadow: inset 0 0 0 1px rgb(28 138 89 / 12%);
+    }
+
+    .answer.correct .answer-letter {
+      border-color: #1c8a59;
+      background: #1c8a59;
+      color: #fff;
+    }
+
+    .answer.correct .answer-check {
+      color: #1c8a59;
+      opacity: 1;
+    }
+
+    .answer.wrong {
+      border-color: #cc4f4f;
+      background: linear-gradient(180deg, #fff3f2, #fbe7e7);
+    }
+
+    .answer.wrong .answer-letter {
+      border-color: #cc4f4f;
+      background: #cc4f4f;
+      color: #fff;
+    }
+
+    .answer.wrong .answer-check {
+      color: #cc4f4f;
+      opacity: 1;
+    }
 
     .game-actions {
       display: flex;
@@ -495,26 +530,40 @@
 
     function renderQuestion() {
       const question = questions[currentQuestion];
+      const hasSelectedAnswer = selectedAnswers[currentQuestion] !== null;
+      const selectedAnswerIndex = selectedAnswers[currentQuestion];
+
       questionCount.textContent = `Вопрос ${currentQuestion + 1} из ${questions.length}`;
       questionLevel.textContent = question.level;
       questionNumber.textContent = `Вопрос ${String(currentQuestion + 1).padStart(2, "0")}`;
       questionTitle.textContent = question.text;
-      progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
-      progressTrack.setAttribute("aria-valuenow", String(currentQuestion));
-      nextButton.disabled = selectedAnswers[currentQuestion] === null;
+      progressBar.style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+      progressTrack.setAttribute("aria-valuenow", String(currentQuestion + 1));
+      nextButton.disabled = !hasSelectedAnswer;
       nextButton.innerHTML = currentQuestion === questions.length - 1
         ? 'Показать результат <span class="button-arrow" aria-hidden="true">→</span>'
         : 'Далее <span class="button-arrow" aria-hidden="true">→</span>';
-      selectionHint.textContent = selectedAnswers[currentQuestion] === null
+      selectionHint.textContent = !hasSelectedAnswer
         ? "Выберите один вариант ответа"
-        : "Ответ выбран";
+        : selectedAnswerIndex === question.correct
+          ? "Правильно!"
+          : "Неправильно. Правильный ответ отмечен зелёным.";
 
       answersContainer.replaceChildren();
       question.options.forEach((option, optionIndex) => {
         const answerButton = document.createElement("button");
         answerButton.className = "answer";
         answerButton.type = "button";
-        answerButton.setAttribute("aria-pressed", String(selectedAnswers[currentQuestion] === optionIndex));
+        answerButton.disabled = hasSelectedAnswer;
+        answerButton.setAttribute("aria-pressed", String(selectedAnswerIndex === optionIndex));
+
+        if (hasSelectedAnswer && optionIndex === question.correct) {
+          answerButton.classList.add("correct");
+        }
+
+        if (hasSelectedAnswer && optionIndex === selectedAnswerIndex && optionIndex !== question.correct) {
+          answerButton.classList.add("wrong");
+        }
 
         const letter = document.createElement("span");
         letter.className = "answer-letter";
@@ -530,6 +579,7 @@
 
         answerButton.append(letter, label, check);
         answerButton.addEventListener("click", () => {
+          if (hasSelectedAnswer) return;
           selectedAnswers[currentQuestion] = optionIndex;
           renderQuestion();
         });
